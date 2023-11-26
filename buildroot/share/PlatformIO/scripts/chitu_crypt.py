@@ -11,7 +11,7 @@ env['CPPDEFINES'].append(("VECT_TAB_ADDR", "0x8008800"))
 custom_ld_script = os.path.abspath("buildroot/share/PlatformIO/ldscripts/chitu_f103.ld")
 for i, flag in enumerate(env["LINKFLAGS"]):
     if "-Wl,-T" in flag:
-        env["LINKFLAGS"][i] = "-Wl,-T" + custom_ld_script
+        env["LINKFLAGS"][i] = f"-Wl,-T{custom_ld_script}"
     elif flag == "-T":
         env["LINKFLAGS"][i + 1] = custom_ld_script
 
@@ -51,7 +51,7 @@ def xor_block(r0, r1, block_number, block_size, file_key):
         xor_seed = (loop_counter * loop_counter) + block_number
 
         # shift the xor_seed left by the bits in IP.
-        xor_seed = xor_seed >> ip
+        xor_seed >>= ip
 
         # load a byte into IP
         ip = r0[loop_counter]
@@ -113,13 +113,12 @@ def encrypt_file(input, output_file, file_length):
 
 # Encrypt ${PROGNAME}.bin and save it as 'update.cbd'
 def encrypt(source, target, env):
-    firmware = open(target[0].path, "rb")
-    update = open(target[0].dir.path +'/update.cbd', "wb")
-    length = os.path.getsize(target[0].path)
+    with open(target[0].path, "rb") as firmware:
+        update = open(f'{target[0].dir.path}/update.cbd', "wb")
+        length = os.path.getsize(target[0].path)
 
-    encrypt_file(firmware, update, length)
+        encrypt_file(firmware, update, length)
 
-    firmware.close()
     update.close()
 
 env.AddPostAction("$BUILD_DIR/${PROGNAME}.bin", encrypt);
